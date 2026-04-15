@@ -1,28 +1,56 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, TextInput, ActivityIndicator } from 'react-native';
-import { COLORS, SIZES, SHADOWS } from '../theme/theme';
+import React, { memo } from 'react';
+import { TouchableOpacity, Text, StyleSheet, View, TextInput, ActivityIndicator, ViewStyle, TextStyle, DimensionValue } from 'react-native';
+import { COLORS, SIZES, SHADOWS, SPACING } from '../theme/theme';
+import { LucideIcon } from 'lucide-react-native';
 
 interface CustomButtonProps {
     title: string;
     onPress: () => void;
     loading?: boolean;
-    style?: any;
+    style?: ViewStyle;
+    textStyle?: TextStyle;
     color?: string;
+    outline?: boolean;
+    disabled?: boolean;
 }
 
-export const CustomButton: React.FC<CustomButtonProps> = ({ title, onPress, loading, style, color = COLORS.primary }) => (
+export const CustomButton: React.FC<CustomButtonProps> = memo(({ 
+    title, 
+    onPress, 
+    loading, 
+    style, 
+    textStyle,
+    color = COLORS.primary, 
+    outline = false,
+    disabled = false
+}) => (
     <TouchableOpacity 
-        style={[styles.button, { backgroundColor: color }, style]} 
+        style={[
+            styles.button, 
+            { backgroundColor: outline ? 'transparent' : color }, 
+            outline && { borderWidth: 1, borderColor: color },
+            (disabled || loading) && { opacity: 0.6 },
+            style
+        ]} 
         onPress={onPress} 
-        disabled={loading}
+        disabled={loading || disabled}
+        activeOpacity={0.7}
     >
         {loading ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={outline ? color : "#FFF"} />
         ) : (
-            <Text style={styles.buttonText}>{title}</Text>
+            <Text style={[
+                styles.buttonText, 
+                { color: outline ? color : '#FFF' },
+                textStyle
+            ]}>
+                {title}
+            </Text>
         )}
     </TouchableOpacity>
-);
+));
+
+CustomButton.displayName = 'CustomButton';
 
 interface CustomInputProps {
     label?: string;
@@ -30,11 +58,11 @@ interface CustomInputProps {
     onChangeText: (text: string) => void;
     placeholder?: string;
     secureTextEntry?: boolean;
-    icon?: React.ElementType;
+    icon?: LucideIcon;
     error?: string;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ label, value, onChangeText, placeholder, secureTextEntry, icon: Icon, error }) => (
+export const CustomInput: React.FC<CustomInputProps> = memo(({ label, value, onChangeText, placeholder, secureTextEntry, icon: Icon, error }) => (
     <View style={styles.inputContainer}>
         {label && <Text style={styles.label}>{label}</Text>}
         <View style={[styles.inputWrapper, error && styles.errorBorder]}>
@@ -44,8 +72,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({ label, value, onChange
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={COLORS.textMuted}
                 secureTextEntry={secureTextEntry}
+                autoCapitalize="none"
                 autoComplete="off"
                 textContentType="none"
                 autoCorrect={false}
@@ -53,19 +82,60 @@ export const CustomInput: React.FC<CustomInputProps> = ({ label, value, onChange
         </View>
         {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
-);
+));
+
+CustomInput.displayName = 'CustomInput';
 
 interface CardProps {
     children: React.ReactNode;
-    style?: any;
+    style?: ViewStyle;
     statusColor?: string;
+    onPress?: () => void;
 }
 
-export const Card: React.FC<CardProps> = ({ children, style, statusColor }) => (
-    <View style={[styles.card, SHADOWS.light, style, statusColor && { borderLeftWidth: 4, borderLeftColor: statusColor }]}>
-        {children}
+export const Card: React.FC<CardProps> = memo(({ children, style, statusColor, onPress }) => {
+    const Component = onPress ? TouchableOpacity : View;
+    return (
+        <Component 
+            onPress={onPress}
+            activeOpacity={0.9}
+            style={[
+                styles.card, 
+                SHADOWS.light, 
+                style, 
+                statusColor && { borderLeftWidth: 4, borderLeftColor: statusColor }
+            ]}
+        >
+            {children}
+        </Component>
+    );
+});
+
+Card.displayName = 'Card';
+
+export const Skeleton: React.FC<{ width: DimensionValue, height: DimensionValue, borderRadius?: number, style?: ViewStyle }> = memo(({ width, height, borderRadius = 4, style }) => (
+    <View style={[styles.skeleton, { width, height, borderRadius }, style]} />
+));
+
+Skeleton.displayName = 'Skeleton';
+
+export const EmptyState: React.FC<{ icon?: LucideIcon, title: string, subtitle?: string, actionTitle?: string, onAction?: () => void }> = memo(({ icon: Icon, title, subtitle, actionTitle, onAction }) => (
+    <View style={styles.emptyContainer}>
+        {Icon && <Icon size={60} color={COLORS.textMuted} style={styles.emptyIcon} />}
+        <Text style={styles.emptyTitle}>{title}</Text>
+        {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
+        {actionTitle && onAction && (
+            <CustomButton 
+                title={actionTitle} 
+                onPress={onAction} 
+                outline 
+                style={styles.emptyAction} 
+            />
+        )}
     </View>
-);
+));
+
+EmptyState.displayName = 'EmptyState';
 
 const styles = StyleSheet.create({
     button: {
@@ -74,6 +144,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 10,
+        height: 54,
     },
     buttonText: {
         color: '#FFF',
@@ -81,13 +152,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     inputContainer: {
-        marginBottom: 15,
+        marginBottom: SPACING.md,
     },
     label: {
         fontSize: SIZES.fontSm,
         color: COLORS.textPrimary,
-        marginBottom: 5,
-        fontWeight: '500',
+        marginBottom: 6,
+        fontWeight: '600',
     },
     inputWrapper: {
         flexDirection: 'row',
@@ -96,11 +167,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.inputBorder,
         borderRadius: SIZES.radius,
-        paddingHorizontal: 12,
-        height: 50,
+        paddingHorizontal: 16,
+        height: 56,
     },
     icon: {
-        marginRight: 10,
+        marginRight: 12,
     },
     input: {
         flex: 1,
@@ -113,12 +184,41 @@ const styles = StyleSheet.create({
     errorText: {
         color: COLORS.error,
         fontSize: 12,
-        marginTop: 4,
+        marginTop: 6,
+        marginLeft: 4,
     },
     card: {
         backgroundColor: COLORS.cardBackground,
         borderRadius: SIZES.radius,
-        padding: 20,
-        marginVertical: 10,
+        padding: SPACING.md,
+        marginVertical: 8,
+    },
+    skeleton: {
+        backgroundColor: COLORS.inputBackground,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    emptyIcon: {
+        marginBottom: 20,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    emptyAction: {
+        minWidth: 150,
     },
 });
