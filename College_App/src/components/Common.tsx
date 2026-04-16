@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, TextInput, ActivityIndicator, ViewStyle, TextStyle, DimensionValue } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View, TextInput, ActivityIndicator, ViewStyle, TextStyle, DimensionValue, StyleProp } from 'react-native';
 import { COLORS, SIZES, SHADOWS, SPACING } from '../theme/theme';
 import { LucideIcon } from 'lucide-react-native';
 
@@ -7,8 +7,8 @@ interface CustomButtonProps {
     title: string;
     onPress: () => void;
     loading?: boolean;
-    style?: ViewStyle;
-    textStyle?: TextStyle;
+    style?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
     color?: string;
     outline?: boolean;
     disabled?: boolean;
@@ -88,7 +88,7 @@ CustomInput.displayName = 'CustomInput';
 
 interface CardProps {
     children: React.ReactNode;
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
     statusColor?: string;
     onPress?: () => void;
 }
@@ -113,7 +113,7 @@ export const Card: React.FC<CardProps> = memo(({ children, style, statusColor, o
 
 Card.displayName = 'Card';
 
-export const Skeleton: React.FC<{ width: DimensionValue, height: DimensionValue, borderRadius?: number, style?: ViewStyle }> = memo(({ width, height, borderRadius = 4, style }) => (
+export const Skeleton: React.FC<{ width: DimensionValue, height: DimensionValue, borderRadius?: number, style?: StyleProp<ViewStyle> }> = memo(({ width, height, borderRadius = 4, style }) => (
     <View style={[styles.skeleton, { width, height, borderRadius }, style]} />
 ));
 
